@@ -28,6 +28,9 @@ _SCRIPT_DOCUMENTATION_
 
 page_size=1000		# 1-1000
 
+if [ ! -d "output" ]; then
+	mkdir output
+fi
 cd output/
 
 function clean(){
