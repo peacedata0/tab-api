@@ -1,0 +1,7 @@
+# tab-api
+
+a bash script to facilitate querying published tableau content.
+
+## configuration
+
+`get-server-data.sh` reads server configuration(s) from `config.json`; see `example-config.json` for an example configuration file.
