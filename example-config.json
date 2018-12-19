@@ -1,0 +1,30 @@
+{
+	"servers" : {
+		"server" : [
+			{
+				"name" : "tab2018.3",
+				"url" : "https://analytics.example.com",
+				"api_version": 2.8,
+				"credentials" : {
+					"name" : "tableau.userid",
+					"password" : "secret-password",
+					"site" : {
+						"contentUrl" : ""
+					}
+				}
+			},
+			{
+				"name" : "tab10.5",
+				"url" : "https://internal.example.com",
+				"api_version": 2.8,
+				"credentials" : {
+					"name" : "tabadmin",
+					"password" : "some-fancy-password",
+					"site" : {
+						"contentUrl" : ""
+					}
+				}
+			}
+		]
+	}
+}
