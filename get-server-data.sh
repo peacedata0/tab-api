@@ -17,6 +17,10 @@ sequencing tableau uses.
 
 # CHANGELOG
 
+## v1.0.1 - 2018-12-19 - RK
+added siteurl (contentUrl) to outputs to enable creating complete links
+changed output to be more specific about which server and site is currently being queried
+
 ## v1.0.0 - 2018-12-13 - RK
 Initial version
 
@@ -41,8 +45,9 @@ function appendData(){
 		tail -n+2 ${1} >> _${1}
 	fi
 }
+
 function auth(){
-	echo "${FUNCNAME[0]} ${1}"
+#	echo "${FUNCNAME[0]} ${1}"
 	local t=''
 	if [ "${1}" == "signin" ]; then
 		t="-d @req.json"
@@ -56,12 +61,12 @@ function auth(){
 	if [ "${1}" != "signout" ]; then
 		TOKEN="X-Tableau-Auth:$(jq ".credentials.token" auth.json | cut -f 2 -d\")"
 		SITEID=$(jq ".credentials.site.id" auth.json | cut -f 2 -d\")
+		SITEURL=$(jq ".credentials.site.contentUrl" auth.json | cut -f2 -d\")
 	fi
 }
 
 function getData(){ # getData endpoint .json.root .list,.of,.json.nodes.to.keep optional_constant_name optional_constant_value
 #	echo "${FUNCNAME[0]}"
-				
 	local URL=${api_url}/$1
 	fileout=$(echo "${1}" | sed "s/\/${SITEID}\//-/g" | sed "s/\/${USERID}\//-/g")
 	local current_page=0
@@ -87,7 +92,7 @@ function getData(){ # getData endpoint .json.root .list,.of,.json.nodes.to.keep 
 			total_pages=$(( ${total_count} / ${page_size} + 1 ))
 			appendData ${fileout}.tsv
 		fi
-		echo "${fileout} - N=${total_count} - batch ${current_page} of ${total_pages}"
+		echo "${server} - ${SITEURL} - ${fileout} - N=${total_count} - batch ${current_page} of ${total_pages}"
 		/bin/sleep 0.1s
 	done
 }
@@ -114,23 +119,23 @@ for i in $(seq 0 ${server_cnt}); do
 	echo
 	echo "${SITEID} (default site)"
 
-	getData sites/${SITEID}/subscriptions .subscriptions.subscription _X_.serverurl,_X_.server,_X_.siteid,.id,.subject,.content.id,.content.type,.schedule.id,.schedule.name,.user.id,.user.name "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+	getData sites/${SITEID}/subscriptions .subscriptions.subscription _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.subject,.content.id,.content.type,.schedule.id,.schedule.name,.user.id,.user.name "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-	getData sites/${SITEID}/datasources .datasources.datasource _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.contentUrl,.type,.createdAt,.updatedAt,.isCertified,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+	getData sites/${SITEID}/datasources .datasources.datasource _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.contentUrl,.type,.createdAt,.updatedAt,.isCertified,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-	getData sites/${SITEID}/projects .projects.project _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.description,.contentPermissions "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+	getData sites/${SITEID}/projects .projects.project _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.description,.contentPermissions "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-	getData sites/${SITEID}/workbooks .workbooks.workbook _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.contentUrl,.showTabs,.size,.createdAt,.updatedAt,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+	getData sites/${SITEID}/workbooks .workbooks.workbook _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.contentUrl,.showTabs,.size,.createdAt,.updatedAt,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-	getData sites/${SITEID}/views .views.view _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.contentUrl,.createdAt,.updatedAt,.workbook.id,.workbook.name,.workbook.contentUrl,.workbook.showTabs,.workbook.size,.workbook.createdAt,.workbook.updatedAt,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin,.project.id,.project.name,.project.description,.usage.totalViewCount "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+	getData sites/${SITEID}/views .views.view _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.contentUrl,.createdAt,.updatedAt,.workbook.id,.workbook.name,.workbook.contentUrl,.workbook.showTabs,.workbook.size,.workbook.createdAt,.workbook.updatedAt,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin,.project.id,.project.name,.project.description,.usage.totalViewCount "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-	getData sites/${SITEID}/users .users.user _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.fullName,.email,.siteRole,.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+	getData sites/${SITEID}/users .users.user _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.fullName,.email,.siteRole,.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-	getData sites/${SITEID}/groups .groups.group _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.domain.name "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+	getData sites/${SITEID}/groups .groups.group _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.domain.name "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
 	# loop over all users to get workbook list
 	while IFS=',' read SITEID USERID; do
-		getData sites/${SITEID}/users/${USERID}/workbooks .workbooks.workbook _X_.serverurl,_X_.server,_X_.siteid,_X_.userid,.id,.name,.contentUrl,.showTabs,.size,.createdAt,.updatedAt,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"userid\":\"${USERID}\"}"
+		getData sites/${SITEID}/users/${USERID}/workbooks .workbooks.workbook _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,_X_.userid,.id,.name,.contentUrl,.showTabs,.size,.createdAt,.updatedAt,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\",\"userid\":\"${USERID}\"}"
 	done << END_USER_LOOP
 $(csvcut -t -c _siteid,id sites-users.tsv | grep -v 'siteid,id')
 END_USER_LOOP
@@ -141,23 +146,23 @@ END_USER_LOOP
 		echo "${SITENAME}"
 		auth switchSite ${SITEURL}
 
-		getData sites/${SITEID}/subscriptions .subscriptions.subscription _X_.serverurl,_X_.server,_X_.siteid,.id,.subject,.content.id,.content.type,.schedule.id,.schedule.name,.user.id,.user.name "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+		getData sites/${SITEID}/subscriptions .subscriptions.subscription _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.subject,.content.id,.content.type,.schedule.id,.schedule.name,.user.id,.user.name "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-		getData sites/${SITEID}/datasources .datasources.datasource _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.contentUrl,.type,.createdAt,.updatedAt,.isCertified,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+		getData sites/${SITEID}/datasources .datasources.datasource _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.contentUrl,.type,.createdAt,.updatedAt,.isCertified,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-		getData sites/${SITEID}/projects .projects.project _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.description,.contentPermissions "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+		getData sites/${SITEID}/projects .projects.project _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.description,.contentPermissions "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-		getData sites/${SITEID}/workbooks .workbooks.workbook _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.contentUrl,.showTabs,.size,.createdAt,.updatedAt,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+		getData sites/${SITEID}/workbooks .workbooks.workbook _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.contentUrl,.showTabs,.size,.createdAt,.updatedAt,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-		getData sites/${SITEID}/views .views.view _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.contentUrl,.createdAt,.updatedAt,.workbook.id,.workbook.name,.workbook.contentUrl,.workbook.showTabs,.workbook.size,.workbook.createdAt,.workbook.updatedAt,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin,.project.id,.project.name,.project.description,.usage.totalViewCount "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+		getData sites/${SITEID}/views .views.view _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.contentUrl,.createdAt,.updatedAt,.workbook.id,.workbook.name,.workbook.contentUrl,.workbook.showTabs,.workbook.size,.workbook.createdAt,.workbook.updatedAt,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin,.project.id,.project.name,.project.description,.usage.totalViewCount "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-		getData sites/${SITEID}/users .users.user _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.fullName,.email,.siteRole,.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+		getData sites/${SITEID}/users .users.user _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.fullName,.email,.siteRole,.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
-		getData sites/${SITEID}/groups .groups.group _X_.serverurl,_X_.server,_X_.siteid,.id,.name,.domain.name "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\"}"
+		getData sites/${SITEID}/groups .groups.group _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,.id,.name,.domain.name "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\"}"
 
 		# loop over all users to get workbook list
 		while IFS=',' read SITEID USERID; do
-			getData sites/${SITEID}/users/${USERID}/workbooks .workbooks.workbook _X_.serverurl,_X_.server,_X_.siteid,_X_.userid,.id,.name,.contentUrl,.showTabs,.size,.createdAt,.updatedAt,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"userid\":\"${USERID}\"}"
+			getData sites/${SITEID}/users/${USERID}/workbooks .workbooks.workbook _X_.serverurl,_X_.server,_X_.siteid,_X_.siteurl,_X_.userid,.id,.name,.contentUrl,.showTabs,.size,.createdAt,.updatedAt,.project.id,.project.name,.project.description,.owner.id,.owner.name,.owner.fullName,.owner.email,.owner.siteRole,.owner.lastLogin "{\"serverurl\":\"${server_url}\",\"server\":\"${server}\",\"siteid\":\"${SITEID}\",\"siteurl\":\"${SITEURL}\",\"userid\":\"${USERID}\"}"
 		done << END_USER_LOOP
 $(csvcut -t -c _siteid,id sites-users.tsv | grep -v 'siteid,id')
 END_USER_LOOP
