@@ -2,7 +2,7 @@
 	"servers" : {
 		"server" : [
 			{
-				"name" : "tab2018.3",
+				"name" : "self-hosted",
 				"url" : "https://analytics.example.com",
 				"api_version": 2.8,
 				"credentials" : {
@@ -14,14 +14,14 @@
 				}
 			},
 			{
-				"name" : "tab10.5",
-				"url" : "https://internal.example.com",
-				"api_version": 2.8,
+				"name" : "tableau-hosted",
+				"url" : "https://us-east-42.online.tableau.com",
+				"api_version": 3.2,
 				"credentials" : {
 					"name" : "tabadmin",
 					"password" : "some-fancy-password",
 					"site" : {
-						"contentUrl" : ""
+						"contentUrl" : "whatever-your-hosted-name-is"
 					}
 				}
 			}
